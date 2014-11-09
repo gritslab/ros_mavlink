@@ -7,8 +7,8 @@ int main(int argc, char** argv)
 
     string port = "/dev/ttyUSB0";
     int baud = 115200;
-    int sysid = 42;
-    int compid = 110;
+    int sysid = 1;
+    int compid = 50;
     RosMavlink rm(port, baud, sysid, compid);
 
     ros::NodeHandle ros_nh;

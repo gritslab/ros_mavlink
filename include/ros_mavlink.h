@@ -16,6 +16,10 @@
 
 #include "mavlink.h"
 
+// ROS messages
+#include <geometry_msgs/Vector3Stamped.h>
+#include <geometry_msgs/Pose.h>
+
 
 //------------------------------------------------------------------------------
 // Namespaces
@@ -51,7 +55,10 @@ private:
     //--------------------------------------------------------------------------
     // ROS
     ros::NodeHandle m_node_handle;
+
     ros::Publisher m_pub_mavlink_attitude;
+
+    ros::Subscriber m_sub_quad_pose;
 
     // Serial
     string m_port;
@@ -59,6 +66,7 @@ private:
     int m_sysid;
     int m_compid;
     int m_fd;
+    char m_buf[300];
 
 
     //--------------------------------------------------------------------------
@@ -66,6 +74,10 @@ private:
     //--------------------------------------------------------------------------
     // Ros
     void m_setup_publishers();
+    void m_setup_subscribers();
+
+    void m_handle_quad_pose(const geometry_msgs::Pose &ros_pose);
+
     void m_decode_mavlink_publish_ros(mavlink_message_t &message);
 
     // Serial
