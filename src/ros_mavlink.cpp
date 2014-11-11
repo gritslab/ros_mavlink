@@ -93,6 +93,7 @@ int RosMavlink::m_open_port()
         return -1;
     } else {
         fcntl(m_fd, F_SETFL, 0);
+        return 0;
     }
 }
 
@@ -341,7 +342,9 @@ void RosMavlink::m_main_thread()
     mavlink_status_t lastStatus;
     lastStatus.packet_rx_drop_count = 0;
     // Blocking wait for new data
-    while (1) {
+
+    ros::Rate r(100);
+    while (ros::ok()) {
         uint8_t cp;
         mavlink_message_t message;
         mavlink_status_t status;
@@ -394,5 +397,7 @@ void RosMavlink::m_main_thread()
 
             m_decode_mavlink_publish_ros(message);
         }
+        //let the loop sleep, so it runs at a rate of 10Hz
+        r.sleep();
     }
 }

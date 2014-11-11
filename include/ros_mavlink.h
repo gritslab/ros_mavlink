@@ -14,7 +14,7 @@
 #include <ros/ros.h>
 #include <string.h>
 
-#include "mavlink.h"
+#include "include/mavlink/pixhawk/mavlink.h"
 
 
 //------------------------------------------------------------------------------

@@ -9,7 +9,7 @@ find_package(catkin REQUIRED roscpp)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
-SET(MAVLINK_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include/mavlink/pixhawk)
+SET(MAVLINK_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/)
 SET(MAVLINK_TYPES_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include/mavlink/common)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
