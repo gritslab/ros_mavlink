@@ -357,8 +357,7 @@ void RosMavlink::m_main_thread()
                                              cp,
                                              &message,
                                              &status);
-            if (lastStatus.packet_rx_drop_count !=
-                    status.packet_rx_drop_count) {
+            if (lastStatus.packet_rx_drop_count != status.packet_rx_drop_count) {
                 ROS_WARN("ERROR: DROPPED %d PACKETS\n",
                          status.packet_rx_drop_count);
                 unsigned char v = cp;
