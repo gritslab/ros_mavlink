@@ -4,7 +4,7 @@ project(ros_mavlink)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED roscpp)
+find_package(catkin REQUIRED roscpp utility)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -86,7 +86,7 @@ FIND_PACKAGE(GTHREAD2  REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ros_mavlink
- CATKIN_DEPENDS roscpp
+ CATKIN_DEPENDS roscpp utility
  DEPENDS system_lib
 )
 
@@ -97,6 +97,7 @@ catkin_package(
 # Specify additional locations of header files
 include_directories(include
                     ${catkin_INCLUDE_DIRS}
+                    ${utility_INCLUDE_DIR}
                     ${MAVLINK_INCLUDE_DIR}
                     ${MAVLINK_TYPES_INCLUDE_DIR}
                     ${GLIB2_MAIN_INCLUDE_DIR}
@@ -110,6 +111,7 @@ add_library(ros_mavlink
 )
 
 target_link_libraries(ros_mavlink
+                      ${utility_LIBRARIES}
                       ${GLIB2_LIBRARY}
                       ${GTHREAD2_LIBRARY}
                       )

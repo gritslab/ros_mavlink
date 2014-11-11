@@ -1,20 +1,19 @@
-/*
-@author Rowland O'Flaherty
-@date 11/06/2014
-*/
+/**
+ * @file ros_mavlink.h
+ * @author Rowland O'Flaherty <rowoflo@gmail.com>
+ * @date 11/06/2014
+ */
 
 //------------------------------------------------------------------------------
 // Includes
 //------------------------------------------------------------------------------
 #include "ros_mavlink.h"
+#include "mmath.h"
 
 // Serial Port
 #include <fcntl.h>   /* File control definitions */
 #include <termios.h> /* POSIX terminal control definitions */
 #include <glib.h> /* Thread definitions */
-
-// ROS messages
-#include <geometry_msgs/Vector3Stamped.h>
 
 //------------------------------------------------------------------------------
 // Namespaces
@@ -41,6 +40,7 @@ m_compid(compid),
 m_fd(0)
 {
     m_setup_publishers();
+    m_setup_subscribers();
     m_start();
 }
 
@@ -64,11 +64,47 @@ RosMavlink::~RosMavlink()
 //------------------------------------------------------------------------------
 // Private Methods
 //------------------------------------------------------------------------------
+
+// ROS
 void RosMavlink::m_setup_publishers()
 {
     m_pub_mavlink_attitude =
         m_node_handle.advertise<geometry_msgs::Vector3>("mavlink_attitude", 1);
 }
+
+void RosMavlink::m_setup_subscribers()
+{
+    m_sub_quad_pose = m_node_handle.subscribe("/quad/pose", 1,
+                                              &RosMavlink::m_handle_quad_pose,
+                                              this);
+}
+
+void RosMavlink::m_handle_quad_pose(const geometry_msgs::Pose &ros_pose)
+{
+    double r = ros_pose.orientation.w;
+    double i = ros_pose.orientation.x;
+    double j = ros_pose.orientation.y;
+    double k = ros_pose.orientation.z;
+    double phi, theta, psi;
+    quat2euler(r, i, j, k, phi, theta, psi);
+
+    mavlink_vicon_position_estimate_t mav_pose;
+
+    mav_pose.x = ros_pose.position.x;
+    mav_pose.y = ros_pose.position.y;
+    mav_pose.z = -ros_pose.position.z;
+    mav_pose.roll = phi;
+    mav_pose.pitch = theta;
+    mav_pose.yaw = psi;
+
+    mavlink_message_t msg;
+    mavlink_msg_vicon_position_estimate_encode(m_sysid, m_compid, &msg,
+                                               &mav_pose);
+    unsigned len = mavlink_msg_to_send_buffer((uint8_t*)m_buf, &msg);
+    write(m_fd, m_buf, len);
+    tcdrain(m_fd);
+}
+
 
 void RosMavlink::m_decode_mavlink_publish_ros(mavlink_message_t &message)
 {
@@ -83,6 +119,8 @@ void RosMavlink::m_decode_mavlink_publish_ros(mavlink_message_t &message)
     }
 }
 
+
+// Serial
 int RosMavlink::m_open_port()
 {
     // Open serial port
