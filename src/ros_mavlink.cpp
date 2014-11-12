@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 #include "ros_mavlink.h"
 #include "mmath.h"
+#include "Commands.h"
 
 // Serial Port
 #include <fcntl.h>   /* File control definitions */
@@ -77,6 +78,39 @@ void RosMavlink::m_setup_subscribers()
     m_sub_quad_pose = m_node_handle.subscribe("/quad/pose", 1,
                                               &RosMavlink::m_handle_quad_pose,
                                               this);
+    //publish cmds service, all commands to the quad use this channel
+    m_sub_cmds = m_node_handle.advertiseService("/quad/cmds", &RosMavlink::m_handle_cmds, this);
+}
+
+bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlink::CommandSrv::Response &res){
+
+	//switch over all commands in Commands.h
+	switch (req.command) {
+		case ARM:
+			ROS_INFO("Received arming command");
+
+			break;
+		case GOTO:
+			double phi, theta, psi;
+			quat2euler(req.pose.orientation.w, req.pose.orientation.x, req.pose.orientation.y, req.pose.orientation.z, phi, theta, psi);
+			ROS_INFO("Received waypoint:\n x=%f\n y=%f\n z=%f\n yaw=%f", req.pose.position.x, req.pose.position.y, req.pose.position.z, psi);
+
+			break;
+		case TAKEOFF:
+			ROS_INFO("Received take-off command");
+
+			break;
+		case LAND:
+			ROS_INFO("Received landing command");
+
+			break;
+		default:
+			ROS_ERROR("Command not recognized");
+			break;
+	}
+	res.success = FALSE;
+	res.result = 123;
+	return 1;
 }
 
 void RosMavlink::m_handle_quad_pose(const geometry_msgs::Pose &ros_pose)

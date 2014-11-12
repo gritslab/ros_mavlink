@@ -20,7 +20,7 @@
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/Pose.h>
 
-
+#include "include/CommandSrv.h"
 //------------------------------------------------------------------------------
 // Namespaces
 //------------------------------------------------------------------------------
@@ -59,6 +59,7 @@ private:
     ros::Publisher m_pub_mavlink_attitude;
 
     ros::Subscriber m_sub_quad_pose;
+    ros::ServiceServer m_sub_cmds;
 
     // Serial
     string m_port;
@@ -77,6 +78,7 @@ private:
     void m_setup_subscribers();
 
     void m_handle_quad_pose(const geometry_msgs::Pose &ros_pose);
+    bool m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlink::CommandSrv::Response &res);
 
     void m_decode_mavlink_publish_ros(mavlink_message_t &message);
 

@@ -1,0 +1,7 @@
+# Service for commands
+
+uint8 command
+geometry_msgs/Pose pose
+---
+bool success
+uint8 result
