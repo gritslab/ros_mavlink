@@ -40,7 +40,7 @@ m_sysid(sysid),
 m_compid(compid),
 m_fd(0)
 {
-    m_setup_publishers();
+	m_setup_publishers();
     m_setup_subscribers();
     m_start();
 }
@@ -50,6 +50,7 @@ RosMavlink::~RosMavlink()
     if (m_fd > 0) {
         m_close_port();
     }
+    m_UART_mutex.~mutex();
 }
 
 //--------------------------------------------------------------------------
@@ -70,35 +71,37 @@ RosMavlink::~RosMavlink()
 void RosMavlink::m_setup_publishers()
 {
     m_pub_mavlink_attitude =
-        m_node_handle.advertise<geometry_msgs::Vector3>("mavlink_attitude", 1);
-}
-
-void RosMavlink::m_setup_subscribers()
-{
-    m_sub_quad_pose = m_node_handle.subscribe("/quad/pose", 1,
-                                              &RosMavlink::m_handle_quad_pose,
-                                              this);
+    m_node_handle.advertise<geometry_msgs::Vector3>("mavlink_attitude", 1);
     //publish cmds service, all commands to the quad use this channel
     m_sub_cmds = m_node_handle.advertiseService("/quad/cmds", &RosMavlink::m_handle_cmds, this);
 }
 
-bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlink::CommandSrv::Response &res){
+void RosMavlink::m_setup_subscribers()
+{
+    m_sub_quad_pose_act = m_node_handle.subscribe("/quad/pose_act", 1,
+                                              &RosMavlink::m_handle_quad_pose_act,
+                                              this);
+    //subscribe to topic over which the waypoints are sent
+//    m_sub_quad_pose_des = m_node_handle.subscribe("/quad/pose_des", 1, &RosMavlink::m_handle_quad_pose_des, this);
 
+}
+
+bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlink::CommandSrv::Response &res){
+    mavlink_message_t msg;
+	__mavlink_command_int_t m_cmd;
 	//switch over all commands in Commands.h
 	switch (req.command) {
 		case ARM:
 			ROS_INFO("Received arming command");
-
+			m_cmd.command = 400;
 			break;
 		case GOTO:
-			double phi, theta, psi;
-			quat2euler(req.pose.orientation.w, req.pose.orientation.x, req.pose.orientation.y, req.pose.orientation.z, phi, theta, psi);
-			ROS_INFO("Received waypoint:\n x=%f\n y=%f\n z=%f\n yaw=%f", req.pose.position.x, req.pose.position.y, req.pose.position.z, psi);
+			ROS_INFO("Received GoTo");
 
 			break;
 		case TAKEOFF:
 			ROS_INFO("Received take-off command");
-
+			m_cmd.command = MAV_CMD_NAV_TAKEOFF;
 			break;
 		case LAND:
 			ROS_INFO("Received landing command");
@@ -108,12 +111,25 @@ bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlin
 			ROS_ERROR("Command not recognized");
 			break;
 	}
-	res.success = FALSE;
-	res.result = 123;
+	ROS_INFO("Encoding message");
+	mavlink_msg_command_int_encode(m_sysid, m_compid, &msg, &m_cmd);
+	ROS_INFO("Trying to write message");
+	m_write_UART(&msg);
+	res.success = TRUE;
 	return 1;
 }
 
-void RosMavlink::m_handle_quad_pose(const geometry_msgs::Pose &ros_pose)
+void RosMavlink::m_write_UART(mavlink_message_t *msg){
+
+    unsigned len = mavlink_msg_to_send_buffer((uint8_t*)m_buf, msg);
+    //lock UART write
+    m_UART_mutex.lock();
+    write(m_fd, m_buf, len);
+    tcdrain(m_fd);
+    m_UART_mutex.unlock();
+}
+
+void RosMavlink::m_handle_quad_pose_act(const geometry_msgs::Pose &ros_pose)
 {
     double r = ros_pose.orientation.w;
     double i = ros_pose.orientation.x;
@@ -134,9 +150,7 @@ void RosMavlink::m_handle_quad_pose(const geometry_msgs::Pose &ros_pose)
     mavlink_message_t msg;
     mavlink_msg_vicon_position_estimate_encode(m_sysid, m_compid, &msg,
                                                &mav_pose);
-    unsigned len = mavlink_msg_to_send_buffer((uint8_t*)m_buf, &msg);
-    write(m_fd, m_buf, len);
-    tcdrain(m_fd);
+    m_write_UART(&msg);
 }
 
 

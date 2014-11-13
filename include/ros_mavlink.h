@@ -13,6 +13,7 @@
 //------------------------------------------------------------------------------
 #include <ros/ros.h>
 #include <string.h>
+#include <boost/thread/mutex.hpp>
 
 #include "include/mavlink/pixhawk/mavlink.h"
 
@@ -58,7 +59,8 @@ private:
 
     ros::Publisher m_pub_mavlink_attitude;
 
-    ros::Subscriber m_sub_quad_pose;
+    ros::Subscriber m_sub_quad_pose_act;
+    ros::Subscriber m_sub_quad_pose_des;
     ros::ServiceServer m_sub_cmds;
 
     // Serial
@@ -69,6 +71,7 @@ private:
     int m_fd;
     char m_buf[300];
 
+    boost::mutex m_UART_mutex;
 
     //--------------------------------------------------------------------------
     // Private Methods
@@ -77,7 +80,11 @@ private:
     void m_setup_publishers();
     void m_setup_subscribers();
 
-    void m_handle_quad_pose(const geometry_msgs::Pose &ros_pose);
+
+    void m_write_UART(mavlink_message_t *msg);
+
+    void m_handle_quad_pose_des(const geometry_msgs::Pose &ros_pose);
+    void m_handle_quad_pose_act(const geometry_msgs::Pose &ros_pose);
     bool m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlink::CommandSrv::Response &res);
 
     void m_decode_mavlink_publish_ros(mavlink_message_t &message);

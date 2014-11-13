@@ -48,7 +48,6 @@
 #include <ros/builtin_message_traits.h>
 #include <ros/message_operations.h>
 
-#include <geometry_msgs/Pose.h>
 
 namespace ros_mavlink
 {
@@ -58,21 +57,16 @@ struct CommandSrvRequest_
   typedef CommandSrvRequest_<ContainerAllocator> Type;
 
   CommandSrvRequest_()
-    : command(0)
-    , pose()  {
+    : command(0)  {
     }
   CommandSrvRequest_(const ContainerAllocator& _alloc)
-    : command(0)
-    , pose(_alloc)  {
+    : command(0)  {
     }
 
 
 
    typedef uint8_t _command_type;
   _command_type command;
-
-   typedef  ::geometry_msgs::Pose_<ContainerAllocator>  _pose_type;
-  _pose_type pose;
 
 
 
@@ -151,12 +145,12 @@ struct MD5Sum< ::ros_mavlink::CommandSrvRequest_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "b6f7710740b93965163b9e40ebf40d7d";
+    return "36e1d21d1340e2a5e93f075b6457cbdf";
   }
 
   static const char* value(const ::ros_mavlink::CommandSrvRequest_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xb6f7710740b93965ULL;
-  static const uint64_t static_value2 = 0x163b9e40ebf40d7dULL;
+  static const uint64_t static_value1 = 0x36e1d21d1340e2a5ULL;
+  static const uint64_t static_value2 = 0xe93f075b6457cbdfULL;
 };
 
 template<class ContainerAllocator>
@@ -178,29 +172,6 @@ struct Definition< ::ros_mavlink::CommandSrvRequest_<ContainerAllocator> >
     return "\n\
 \n\
 uint8 command\n\
-geometry_msgs/Pose pose\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Pose\n\
-# A representation of pose in free space, composed of postion and orientation. \n\
-Point position\n\
-Quaternion orientation\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Point\n\
-# This contains the position of a point in free space\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
-\n\
-================================================================================\n\
-MSG: geometry_msgs/Quaternion\n\
-# This represents an orientation in free space in quaternion form.\n\
-\n\
-float64 x\n\
-float64 y\n\
-float64 z\n\
-float64 w\n\
 ";
   }
 
@@ -220,7 +191,6 @@ namespace serialization
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
       stream.next(m.command);
-      stream.next(m.pose);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER;
@@ -241,9 +211,6 @@ struct Printer< ::ros_mavlink::CommandSrvRequest_<ContainerAllocator> >
   {
     s << indent << "command: ";
     Printer<uint8_t>::stream(s, indent + "  ", v.command);
-    s << indent << "pose: ";
-    s << std::endl;
-    Printer< ::geometry_msgs::Pose_<ContainerAllocator> >::stream(s, indent + "  ", v.pose);
   }
 };
 

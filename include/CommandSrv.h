@@ -73,7 +73,7 @@ template<>
 struct MD5Sum< ::ros_mavlink::CommandSrv > {
   static const char* value()
   {
-    return "1cd90afc5164220b20bf2698b0483096";
+    return "5c8a2b607525c6afcd3f3f70d56f3c09";
   }
 
   static const char* value(const ::ros_mavlink::CommandSrv&) { return value(); }

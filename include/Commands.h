@@ -12,7 +12,8 @@ enum Commands{
 	ARM,
 	TAKEOFF,
 	GOTO,
-	LAND
+	LAND,
+	DISARM,
 };
 
 

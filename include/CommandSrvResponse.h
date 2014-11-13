@@ -58,11 +58,11 @@ struct CommandSrvResponse_
 
   CommandSrvResponse_()
     : success(false)
-    , result(0)  {
+    , answer(0)  {
     }
   CommandSrvResponse_(const ContainerAllocator& _alloc)
     : success(false)
-    , result(0)  {
+    , answer(0)  {
     }
 
 
@@ -70,8 +70,8 @@ struct CommandSrvResponse_
    typedef uint8_t _success_type;
   _success_type success;
 
-   typedef uint8_t _result_type;
-  _result_type result;
+   typedef int8_t _answer_type;
+  _answer_type answer;
 
 
 
@@ -150,12 +150,12 @@ struct MD5Sum< ::ros_mavlink::CommandSrvResponse_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "1cd894375e4e3d2861d2222772894fdb";
+    return "ee02f94dacd96faff36fe426698f8897";
   }
 
   static const char* value(const ::ros_mavlink::CommandSrvResponse_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x1cd894375e4e3d28ULL;
-  static const uint64_t static_value2 = 0x61d2222772894fdbULL;
+  static const uint64_t static_value1 = 0xee02f94dacd96fafULL;
+  static const uint64_t static_value2 = 0xf36fe426698f8897ULL;
 };
 
 template<class ContainerAllocator>
@@ -175,7 +175,8 @@ struct Definition< ::ros_mavlink::CommandSrvResponse_<ContainerAllocator> >
   static const char* value()
   {
     return "bool success\n\
-uint8 result\n\
+int8 answer\n\
+\n\
 ";
   }
 
@@ -195,7 +196,7 @@ namespace serialization
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
       stream.next(m.success);
-      stream.next(m.result);
+      stream.next(m.answer);
     }
 
     ROS_DECLARE_ALLINONE_SERIALIZER;
@@ -216,8 +217,8 @@ struct Printer< ::ros_mavlink::CommandSrvResponse_<ContainerAllocator> >
   {
     s << indent << "success: ";
     Printer<uint8_t>::stream(s, indent + "  ", v.success);
-    s << indent << "result: ";
-    Printer<uint8_t>::stream(s, indent + "  ", v.result);
+    s << indent << "answer: ";
+    Printer<int8_t>::stream(s, indent + "  ", v.answer);
   }
 };
 
