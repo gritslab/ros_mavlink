@@ -1,9 +1,10 @@
-/*
-@brief Class for ROS and Mavlink communication
-
-@author Rowland O'Flaherty
-@date 11/06/2014
-*/
+/**
+ * @brief Class for ROS and Mavlink communication
+ *
+ * @author Rowland O'Flaherty
+ * @author Urs Borrmann
+ * @date 11/06/2014
+ */
 
 #ifndef ROS_MAVLINK_H
 #define ROS_MAVLINK_H

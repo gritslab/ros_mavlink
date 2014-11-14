@@ -1,7 +1,5 @@
 /**
- * @file ros_mavlink.h
- * @author Rowland O'Flaherty <rowoflo@gmail.com>
- * @date 11/06/2014
+ * @file ros_mavlink.cpp
  */
 
 //------------------------------------------------------------------------------
@@ -79,7 +77,7 @@ void RosMavlink::m_setup_publishers()
 
 void RosMavlink::m_setup_subscribers()
 {
-    m_sub_quad_pose_act = m_node_handle.subscribe("/quad/pose_act", 1,
+    m_sub_quad_pose_act = m_node_handle.subscribe("/quad/pose", 1,
                                               &RosMavlink::m_handle_quad_pose_act,
                                               this);
     //subscribe to topic over which the waypoints are sent

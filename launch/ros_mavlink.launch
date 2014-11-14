@@ -2,7 +2,7 @@
     <node name="ros_mavlink" pkg="ros_mavlink" type="ros_mavlink_main" required="true" output="screen">
         <param name="uart_port" type="string" value="/dev/ttyUSB0" />
         <param name="uart_baudrate" type="int" value="115200" />
-        <param name="uart_sysid" type="int" value="42" />
-        <param name="uart_compid" type="int" value="110" />
+        <param name="uart_sysid" type="int" value="1" />
+        <param name="uart_compid" type="int" value="50" />
     </node>
 </launch>
