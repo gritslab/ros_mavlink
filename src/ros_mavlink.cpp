@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 #include "ros_mavlink.h"
 #include "mmath.h"
-#include "Commands.h"
+#include "quad_finite_state.h"
 
 // Serial Port
 #include <fcntl.h>   /* File control definitions */
@@ -40,6 +40,7 @@ m_sysid(sysid),
 m_compid(compid),
 m_fd(0)
 {
+	armed = false;
 	m_setup_publishers();
     m_setup_subscribers();
     m_start();
@@ -82,38 +83,54 @@ void RosMavlink::m_setup_subscribers()
                                               &RosMavlink::m_handle_quad_pose_act,
                                               this);
     //subscribe to topic over which the waypoints are sent
-//    m_sub_quad_pose_des = m_node_handle.subscribe("/quad/pose_des", 1, &RosMavlink::m_handle_quad_pose_des, this);
+    m_sub_quad_pose_des = m_node_handle.subscribe("/quad/pose_des", 1, &RosMavlink::m_handle_quad_pose_des, this);
 
 }
 
 bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlink::CommandSrv::Response &res){
     mavlink_message_t msg;
 	__mavlink_command_int_t m_cmd;
+	__mavlink_command_long_t m_cmd_l;
 	//switch over all commands in Commands.h
 	switch (req.command) {
-		case ARM:
+		case TOGGLE_ARM:
 			ROS_INFO("Received arming command");
 			m_cmd.command = 400;
+			m_cmd.param1 = (armed)?0:1;
+			armed = !armed;
+			mavlink_msg_command_int_encode(m_sysid, m_compid, &msg, &m_cmd);
 			break;
-		case GOTO:
+		case FLY_TO:
 			ROS_INFO("Received GoTo");
 
 			break;
 		case TAKEOFF:
 			ROS_INFO("Received take-off command");
 			m_cmd.command = MAV_CMD_NAV_TAKEOFF;
+			mavlink_msg_command_int_encode(m_sysid, m_compid, &msg, &m_cmd);
 			break;
 		case LAND:
 			ROS_INFO("Received landing command");
-
+			m_cmd.command = MAV_CMD_NAV_LAND;
+			mavlink_msg_command_int_encode(m_sysid, m_compid, &msg, &m_cmd);
+			break;
+		case CALIBRATE:
+			ROS_INFO("Preflight Calibration");
+			m_cmd_l.command = MAV_CMD_PREFLIGHT_CALIBRATION;
+			m_cmd_l.param1 = 1;
+			m_cmd_l.param2 = 0;
+			m_cmd_l.param3 = 1;
+			m_cmd_l.param4 = 0;
+			m_cmd_l.param5 = 1;
+			m_cmd_l.param6 = 0;
+			m_cmd_l.param7 = 0;
+			mavlink_msg_command_long_encode(m_sysid, m_compid, &msg, &m_cmd_l);
 			break;
 		default:
 			ROS_ERROR("Command not recognized");
 			break;
 	}
-	ROS_INFO("Encoding message");
-	mavlink_msg_command_int_encode(m_sysid, m_compid, &msg, &m_cmd);
-	ROS_INFO("Trying to write message");
+
 	m_write_UART(&msg);
 	res.success = TRUE;
 	return 1;
@@ -123,11 +140,27 @@ void RosMavlink::m_write_UART(mavlink_message_t *msg){
 
     unsigned len = mavlink_msg_to_send_buffer((uint8_t*)m_buf, msg);
     //lock UART write
+    ROS_DEBUG("Trying to write message");
     m_UART_mutex.lock();
     write(m_fd, m_buf, len);
     tcdrain(m_fd);
     m_UART_mutex.unlock();
 }
+
+void RosMavlink::m_handle_quad_pose_des(const geometry_msgs::Pose &ros_pose){
+    double r = ros_pose.orientation.w;
+    double i = ros_pose.orientation.x;
+    double j = ros_pose.orientation.y;
+    double k = ros_pose.orientation.z;
+    double phi, theta, psi;
+    quat2euler(r, i, j, k, phi, theta, psi);
+
+    //mavlink_set_position_target_local_ned_t
+
+
+
+}
+
 
 void RosMavlink::m_handle_quad_pose_act(const geometry_msgs::Pose &ros_pose)
 {
@@ -154,17 +187,25 @@ void RosMavlink::m_handle_quad_pose_act(const geometry_msgs::Pose &ros_pose)
 }
 
 
-void RosMavlink::m_decode_mavlink_publish_ros(mavlink_message_t &message)
+void RosMavlink::m_decode_mavlink(mavlink_message_t &message)
 {
-    if (message.msgid == MAVLINK_MSG_ID_ATTITUDE) {
-        mavlink_attitude_t att;
-        mavlink_msg_attitude_decode(&message, &att);
-        geometry_msgs::Vector3 msg;
-        msg.x = att.roll;
-        msg.y = att.pitch;
-        msg.z = att.yaw;
-        m_pub_mavlink_attitude.publish(msg);
+	//check if message contains a pose, if yes send it over ROS, otherwise store message for internal use
+    if(message.msgid == MAVLINK_MSG_ID_ATTITUDE){
+    		m_publish_ros_pose(message);
     }
+    else{
+    	message_queue.push_back(message);
+    }
+
+}
+void RosMavlink::m_publish_ros_pose(mavlink_message_t &message){
+	mavlink_attitude_t att;
+	mavlink_msg_attitude_decode(&message, &att);
+	geometry_msgs::Vector3 msg;
+	msg.x = att.roll;
+	msg.y = att.pitch;
+	msg.z = att.yaw;
+	m_pub_mavlink_attitude.publish(msg);
 }
 
 
@@ -480,7 +521,7 @@ void RosMavlink::m_main_thread()
                      message.sysid,
                      message.compid);
 
-            m_decode_mavlink_publish_ros(message);
+            m_decode_mavlink(message);
         }
         //let the loop sleep, so it runs at a rate of 10Hz
         r.sleep();

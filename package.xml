@@ -12,8 +12,8 @@
   <build_depend>utility</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>quadrotor</build_depend>
-  
   <run_depend>message_runtime</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>utility</run_depend>
+  <run_depend>quadrotor</run_depend>
 </package>

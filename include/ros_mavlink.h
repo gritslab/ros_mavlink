@@ -71,7 +71,10 @@ private:
     int m_fd;
     char m_buf[300];
 
+    bool armed ;
+
     boost::mutex m_UART_mutex;
+    vector<mavlink_message_t> message_queue;
 
     //--------------------------------------------------------------------------
     // Private Methods
@@ -87,7 +90,8 @@ private:
     void m_handle_quad_pose_act(const geometry_msgs::Pose &ros_pose);
     bool m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlink::CommandSrv::Response &res);
 
-    void m_decode_mavlink_publish_ros(mavlink_message_t &message);
+    void m_decode_mavlink(mavlink_message_t &message);
+    void m_publish_ros_pose(mavlink_message_t &message);
 
     // Serial
     int m_open_port();
