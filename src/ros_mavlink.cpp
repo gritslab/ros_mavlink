@@ -87,15 +87,17 @@ void RosMavlink::m_setup_subscribers()
 
 bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlink::CommandSrv::Response &res){
     mavlink_message_t msg;
-	__mavlink_command_int_t m_cmd;
-	__mavlink_command_long_t m_cmd_l;
+	mavlink_command_int_t m_cmd;
+	mavlink_command_long_t m_cmd_l;
 	//switch over all commands in Commands.h
 	switch (req.command) {
 		case TOGGLE_ARM:
 			ROS_INFO("Received arming command");
-			m_cmd.command = 400;
-			m_cmd.param1 = (armed)?0:1;
-			armed = !armed;
+            armed = !armed;
+			m_cmd.command = MAV_CMD_COMPONENT_ARM_DISARM;
+            m_cmd.target_system = m_sysid;
+            m_cmd.target_component = m_compid;
+			m_cmd.param1 = armed;
 			mavlink_msg_command_int_encode(m_sysid, m_compid, &msg, &m_cmd);
 			break;
 		case FLY_TO:
@@ -115,14 +117,17 @@ bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlin
 		case CALIBRATE:
 			ROS_INFO("Preflight Calibration");
 			m_cmd_l.command = MAV_CMD_PREFLIGHT_CALIBRATION;
-			m_cmd_l.param1 = 1;
-			m_cmd_l.param2 = 0;
-			m_cmd_l.param3 = 1;
+            m_cmd_l.target_system = m_sysid;
+            m_cmd_l.target_component = m_compid;
+			m_cmd_l.param1 = 0;
+			m_cmd_l.param2 = 1;
+			m_cmd_l.param3 = 0;
 			m_cmd_l.param4 = 0;
-			m_cmd_l.param5 = 1;
+			m_cmd_l.param5 = 0;
 			m_cmd_l.param6 = 0;
 			m_cmd_l.param7 = 0;
 			mavlink_msg_command_long_encode(m_sysid, m_compid, &msg, &m_cmd_l);
+
 			break;
 		default:
 			ROS_ERROR("Command not recognized");
@@ -131,18 +136,20 @@ bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlin
 
 	m_write_UART(&msg);
 	res.success = TRUE;
-	return 1;
+	return 0;
 }
 
 void RosMavlink::m_write_UART(mavlink_message_t *msg){
 
     unsigned len = mavlink_msg_to_send_buffer((uint8_t*)m_buf, msg);
     //lock UART write
+
+    ROS_INFO("Sending message");
     ROS_DEBUG("Trying to write message");
-    m_UART_mutex.lock();
+    // m_UART_mutex.lock();
     write(m_fd, m_buf, len);
     tcdrain(m_fd);
-    m_UART_mutex.unlock();
+    // m_UART_mutex.unlock();
 }
 
 void RosMavlink::m_handle_quad_pose_des(const geometry_msgs::Pose &ros_pose){
