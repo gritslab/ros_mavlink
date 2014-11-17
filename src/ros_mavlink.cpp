@@ -73,6 +73,7 @@ void RosMavlink::m_setup_publishers()
     m_node_handle.advertise<geometry_msgs::Vector3>("mavlink_attitude", 1);
     //publish cmds service, all commands to the quad use this channel
     m_sub_cmds = m_node_handle.advertiseService("/quad/cmds", &RosMavlink::m_handle_cmds, this);
+    system_state = 0;
 }
 
 void RosMavlink::m_setup_subscribers()
@@ -97,7 +98,12 @@ bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlin
 			m_cmd.command = MAV_CMD_COMPONENT_ARM_DISARM;
             m_cmd.target_system = m_sysid;
             m_cmd.target_component = m_compid;
-			m_cmd.param1 = armed;
+            if(system_state==MAV_STATE_STANDBY){
+            	m_cmd.param1 = 1;
+            }
+            else{
+            	m_cmd.param1 = 0;
+            }
 			mavlink_msg_command_int_encode(m_sysid, m_compid, &msg, &m_cmd);
 			break;
 		case FLY_TO:
@@ -120,23 +126,38 @@ bool RosMavlink::m_handle_cmds(ros_mavlink::CommandSrv::Request &req, ros_mavlin
             m_cmd_l.target_system = m_sysid;
             m_cmd_l.target_component = m_compid;
 			m_cmd_l.param1 = 0;
-			m_cmd_l.param2 = 1;
+			m_cmd_l.param2 = 0;
 			m_cmd_l.param3 = 0;
 			m_cmd_l.param4 = 0;
-			m_cmd_l.param5 = 0;
+			m_cmd_l.param5 = 1;
 			m_cmd_l.param6 = 0;
 			m_cmd_l.param7 = 0;
 			mavlink_msg_command_long_encode(m_sysid, m_compid, &msg, &m_cmd_l);
 
 			break;
-		default:
-			ROS_ERROR("Command not recognized");
+		case RETURN:
+			ROS_INFO("Return to launch");
+			m_cmd_l.command = MAV_CMD_NAV_RETURN_TO_LAUNCH;
+			m_cmd_l.target_system = m_sysid;
+			m_cmd_l.target_component = m_compid;
+			m_cmd_l.param1 = 0;
+			m_cmd_l.param2 = 0;
+			m_cmd_l.param3 = 0;
+			m_cmd_l.param4 = 0;
+			m_cmd_l.param5 = 1;
+			m_cmd_l.param6 = 0;
+			m_cmd_l.param7 = 0;
+			mavlink_msg_command_long_encode(m_sysid, m_compid, &msg, &m_cmd_l);
 			break;
+		default:
+			ROS_ERROR("Command not recognized!");
+			res.success = FALSE;
+			return 0;
 	}
 
 	m_write_UART(&msg);
 	res.success = TRUE;
-	return 0;
+	return 1;
 }
 
 void RosMavlink::m_write_UART(mavlink_message_t *msg){
@@ -199,7 +220,24 @@ void RosMavlink::m_decode_mavlink(mavlink_message_t &message)
     		m_publish_ros_pose(message);
     }
     else{
-    	message_queue.push_back(message);
+    	if(message.msgid == MAVLINK_MSG_ID_COMMAND_ACK){
+			__mavlink_command_ack_t* msg;
+			mavlink_msg_command_ack_decode(&message, msg);
+			ROS_INFO("Received message Command: %d, Result %d", msg->command, msg->result);
+			message_queue.push_back(message);
+    	}
+    	if(message.msgid == MAVLINK_MSG_ID_HEARTBEAT){
+    		__mavlink_heartbeat_t* msg;
+    		mavlink_msg_heartbeat_decode(&message, msg);
+    		ROS_INFO("System state %d",msg->system_status);
+    		system_state = msg->system_status;
+    	}
+    	if(message.msgid ==  MAVLINK_MSG_ID_BATTERY_STATUS){
+    		__mavlink_battery_status_t* msg;
+    		mavlink_msg_battery_status_decode(&message, msg);
+    		ROS_INFO("Battery Status: Percent left: %d", msg->battery_remaining);
+
+    	}
     }
 
 }
@@ -520,15 +558,16 @@ void RosMavlink::m_main_thread()
                 }
             }
 
-            ROS_INFO("Received message from serial \
+            /*ROS_INFO("Received message from serial \
                      with ID #%d (sys:%d|comp:%d):\n",
+
                      message.msgid,
                      message.sysid,
-                     message.compid);
+                     message.compid);*/
 
             m_decode_mavlink(message);
         }
         //let the loop sleep, so it runs at a rate of 10Hz
-        r.sleep();
+        //r.sleep();
     }
 }

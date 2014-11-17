@@ -27,6 +27,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ros_mavlink}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/home/urs/catkin_ws/src/utility/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/quadrotor/include}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2032535243" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -36,6 +37,7 @@
 									<listOptionValue builtIn="false" value="/opt/ros/indigo/include"/>
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/home/urs/catkin_ws/src/utility/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/quadrotor/include}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.906352545" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -52,6 +54,7 @@
 									<listOptionValue builtIn="false" value="/opt/ros/indigo/include"/>
 									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
 									<listOptionValue builtIn="false" value="/home/urs/catkin_ws/src/utility/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/quadrotor/include}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1943623731" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>

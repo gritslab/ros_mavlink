@@ -72,7 +72,8 @@ private:
     int m_fd;
     char m_buf[300];
 
-    bool armed ;
+    bool armed;
+    int system_state;
 
     boost::mutex m_UART_mutex;
     vector<mavlink_message_t> message_queue;
