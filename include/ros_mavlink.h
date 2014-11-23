@@ -92,6 +92,7 @@ private:
 
     void m_decode_mavlink(mavlink_message_t &message);
     void m_publish_ros_pose(mavlink_message_t &message);
+    bool m_toggle_arm();
 
     // Serial
     int m_open_port();
